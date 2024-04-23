@@ -3,12 +3,16 @@ import styled from 'styled-components'
 import { useSelector, useDispatch } from 'react-redux'
 import { toggleShowCompletedTodos } from '../state/todosSlice'
 
+import { useGetTodosQuery, useToggleTodoMutation } from '../state/todosAPI'
+
 const StyledTodo = styled.li`
   text-decoration: ${pr => pr.$complete ? 'line-through' : 'initial'};
   cursor: pointer;
 `
 
 export default function Todo() {
+  //rtk query
+  const {data: todos} = useGetTodosQuery()
   // redux
   const showCompletedTodos = useSelector(st => st.todosState.showCompletedTodos)
   const dispatch = useDispatch()
@@ -18,21 +22,22 @@ export default function Todo() {
       <h3>Todos</h3>
       <ul>
         {
-          [
-            { id: 1, label: 'Laundry', complete: true },
-            { id: 2, label: 'Groceries', complete: false },
-            { id: 3, label: 'Dishes', complete: false },
-          ].filter(todo => {
+          todos?.filter(todo => {
             return showCompletedTodos || !todo.complete
           })
             .map(todo => {
+              const onToggle = (id) => {
+                useToggleTodoMutation(id)
+              }
               return (
-                <StyledTodo $complete={todo.complete} key={todo.id}>
+                <StyledTodo $complete={todo.complete} key={todo.id} onClick={() => onToggle(todo.id)}>
                   <span>{todo.label}{todo.complete && ' ✔️'}</span>
                 </StyledTodo>
               )
             })
         }
+
+
       </ul>
       <button onClick={() => dispatch(toggleShowCompletedTodos())}>
         {showCompletedTodos ? 'Hide' : 'Show'} completed todos
